@@ -15,8 +15,8 @@ def scrape_and_clean_data(usernames):
         yield cleaned_data
 
 
-def main():
-    usernames = get_linkedin_usernames('sample.csv')
+def main(file_path='sample.csv'):
+    usernames = get_linkedin_usernames(file_path)
 
     # Scrape and clean data for each username, and add it to a CSV file
     for data in scrape_and_clean_data(usernames):

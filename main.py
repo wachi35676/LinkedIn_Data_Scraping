@@ -6,7 +6,7 @@ from gpt_data_cleaning import clean_data
 from dictionary_to_csv import add_entry_to_csv
 
 
-def scrape_and_clean_data(usernames):
+def scrape_and_clean_data(usernames, emails):
     """
     Scrape and clean data for each username
     :param usernames:
@@ -16,7 +16,8 @@ def scrape_and_clean_data(usernames):
         raw_data = scrape_linkedin_data(username)
         cleaned_data = clean_data(json.loads(raw_data))
         cleaned_data = json.loads(cleaned_data)
-        cleaned_data['LinkedInLink'] = f"https://www.linkedin.com/in/{username}"
+        cleaned_data['PersonLinkedin'] = f"https://www.linkedin.com/in/{username}"
+        cleaned_data['Email'] = emails[username]
         yield cleaned_data
 
 
@@ -26,10 +27,10 @@ def main(file_path='sample.csv'):
     :param file_path:
     :return:
     """
-    usernames = get_linkedin_usernames(file_path)
+    usernames, emails = get_linkedin_usernames(file_path)
 
     # Scrape and clean data for each username, and add it to a CSV file
-    for data in scrape_and_clean_data(usernames):
+    for data in scrape_and_clean_data(usernames, emails):
         add_entry_to_csv(data)
 
     print("Data added to CSV file")

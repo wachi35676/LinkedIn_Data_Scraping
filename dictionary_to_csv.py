@@ -10,14 +10,14 @@ def add_entry_to_csv(data, filename='output.csv'):
     :param filename:
     :return:
     """
-    headers = ['FirstName', 'LastName', 'CompanyName', 'Email', 'LocationCity', 'JobTitle', 'LinkedInLink',
-               'Experience', 'UniversityAttendedForBachelorsDegree', 'BachelorsDegreeFieldOfStudy',
-               'UniversityAttendedForMastersDegree', 'MastersDegreeFieldOfStudy']
+    headers = ['FirstName', 'LastName', 'Company', 'Email', 'Title', 'City', 'Industry', 'PersonLinkedin',
+               'Experience', 'BachelorsUniversity', 'BachelorsFieldOfStudy',
+               'MastersUniversity', 'MastersFieldOfStudy']
 
     if isinstance(data, str):
         data = json.loads(data)
 
-    experience_str = '; '.join([f'{exp["Role"]}, {exp["Company"]}, {exp["Duration"]}' for exp in data["Experience"]])
+    experience_str = '\n'.join([f'{exp["Role"]}, {exp["Company"]}, {exp["Duration"]}' for exp in data["Experience"]])
     data["Experience"] = experience_str
 
     data = {key: data[key] for key in headers if key in data}
@@ -39,7 +39,6 @@ if __name__ == "__main__":
         "FirstName": "Zachary",
         "LastName": "Bramwell",
         "CompanyName": "Sperry, Mitchell & Company",
-        "Email": "zbramwell@sperrymitchell.com",
         "LocationCity": "New York",
         "JobTitle": "Analyst",
         "LinkedInLink": "linkedin.com/in/zacharybramwell",

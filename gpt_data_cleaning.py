@@ -9,34 +9,35 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 desired_format = {
-    "FirstName": "Zachary",
-    "LastName": "Bramwell",
-    "CompanyName": "Sperry, Mitchell & Company",
-    "Email": "zbramwell@sperrymitchell.com",
-    "LocationCity": "New York",
-    "JobTitle": "Analyst",
-    "LinkedInLink": "linkedin.com/in/zacharybramwell",
+    "FirstName": "David",
+    "LastName": "Schmidt",
+    "Company": "Goldman Sachs",
+    "Email": "david.c.schmidt@gs.com",
+    "City": "New York",
+    "Title": "Investment Banking Associate",
+    "Industry": "Investment Banking",
+    "PersonLinkedin": "http://www.linkedin.com/in/1davidschmidt",
     "Experience": [
         {
-            "Role": "Associate",
-            "Company": "Sperry, Mitchell & Company",
-            "Duration": "2024-Present"
+            "Role": "Investment Banking Associate",
+            "Company": "Goldman Sachs",
+            "Duration": "2021 - Present"
         },
         {
-            "Role": "Analyst",
-            "Company": "Sperry, Mitchell & Company",
-            "Duration": "2022-2024"
+            "Role": "Credit Associate",
+            "Company": "Goldman Sachs",
+            "Duration": "2021 - 2021"
         },
         {
-            "Role": "Teaching Assistant",
-            "Company": "Cornell University",
-            "Duration": "2022-2022"
+            "Role": "Credit Analyst",
+            "Company": "Goldman Sachs",
+            "Duration": "2017 -2020"
         }
     ],
-    "UniversityAttendedForBachelorsDegree": "Cornell University",
-    "BachelorsDegreeFieldOfStudy": "Applied Economics and Management",
-    "UniversityAttendedForMastersDegree": "",
-    "MastersDegreeFieldOfStudy": ""
+    "BachelorsUniversity": "Stanford University",
+    "BachelorsFieldOfStudy": "Management Science & Engineering",
+    "MastersUniversity": "",
+    "MastersFieldOfStudy": ""
 }
 
 

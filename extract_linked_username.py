@@ -2,6 +2,11 @@ import csv
 
 
 def get_linkedin_usernames(filename='sample.csv'):
+    """
+    Get LinkedIn usernames from a CSV file
+    :param filename:
+    :return:
+    """
     with open(filename, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         usernames = []

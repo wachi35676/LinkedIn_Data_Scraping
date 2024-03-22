@@ -4,6 +4,12 @@ import json
 
 
 def add_entry_to_csv(data, filename='output.csv'):
+    """
+    Add a dictionary entry to a CSV file
+    :param data:
+    :param filename:
+    :return:
+    """
     headers = ['FirstName', 'LastName', 'CompanyName', 'Email', 'LocationCity', 'JobTitle', 'LinkedInLink',
                'Experience', 'UniversityAttendedForBachelorsDegree', 'BachelorsDegreeFieldOfStudy',
                'UniversityAttendedForMastersDegree', 'MastersDegreeFieldOfStudy']

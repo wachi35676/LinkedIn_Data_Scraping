@@ -2,7 +2,6 @@ import csv
 import http.client
 import json
 import os
-from tkinter import messagebox
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -82,7 +81,6 @@ def scrape_linkedin_data(username):
 
     if res.status == 429:
         response = json.loads(res.read().decode("utf-8"))
-        messagebox.showerror("Error", "Response code 429: " + response["message"])
         raise Exception("Response code 429: " + response["message"])
 
     data = res.read()
@@ -147,13 +145,15 @@ def add_entry_to_csv(data, filename='output.csv'):
         os.fsync(csvfile.fileno())
 
 
-def scrape_and_clean_data(usernames, emails):
+def scrape_and_clean_data(usernames, emails, update_username_callback):
     """
     Scrape and clean data for each username
     :param usernames:
+    :param update_username_callback: Callback function to update the username
     :return:
     """
     for username in usernames:
+        update_username_callback(username)  # Call the callback with the current username
         raw_data = scrape_linkedin_data(username)
         cleaned_data = clean_data(json.loads(raw_data))
         cleaned_data = json.loads(cleaned_data)
@@ -162,16 +162,17 @@ def scrape_and_clean_data(usernames, emails):
         yield cleaned_data
 
 
-def main(file_path='sample.csv'):
+def main(file_path='sample.csv', update_username_callback=None):
     """
     Main function to scrape and clean data for LinkedIn usernames in a CSV file
     :param file_path:
+    :param update_username_callback: Callback function to update the username
     :return:
     """
     usernames, emails = get_linkedin_usernames(file_path)
 
     # Scrape and clean data for each username, and add it to a CSV file
-    for data in scrape_and_clean_data(usernames, emails):
+    for data in scrape_and_clean_data(usernames, emails, update_username_callback):
         add_entry_to_csv(data)
 
     print("Data added to CSV file")

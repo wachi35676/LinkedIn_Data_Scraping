@@ -10,7 +10,6 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 desired_format = {
     "FirstName": "David",
     "LastName": "Schmidt",
@@ -55,11 +54,19 @@ def get_linkedin_usernames(filename='sample.csv'):
         usernames = []
         emails = {}
         for row in reader:
-            link = row['LinkedIn link']
-            username = link.split('/')[-1]
+            username = get_username_from_linkedin_link(row['LinkedIn link'])
             usernames.append(username)
             emails[username] = row['Email']
         return usernames, emails
+
+
+def get_username_from_linkedin_link(link):
+    """
+    Get the username from a LinkedIn link
+    :param link:
+    :return:
+    """
+    return link.split('/')[-1]
 
 
 def scrape_linkedin_data(username):
@@ -114,9 +121,10 @@ def clean_data(raw_data):
     return response.choices[0].message.content
 
 
-def add_entry_to_csv(data, filename='output.csv'):
+def add_entry_to_csv(data, filename='output.csv', duplicate_username_warning_callback=None):
     """
     Add a dictionary entry to a CSV file
+    :param duplicate_username_warning_callback:
     :param data:
     :param filename:
     :return:
@@ -134,10 +142,19 @@ def add_entry_to_csv(data, filename='output.csv'):
     data = {key: data[key] for key in headers if key in data}
 
     file_exists = os.path.isfile(filename)
+
+    if file_exists and duplicate_username_warning_callback is not None:
+        with open(filename, 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            existing_entries = list(reader)
+            if any(entry['PersonLinkedin'] == data['PersonLinkedin'] for entry in existing_entries):
+                duplicate_username_warning_callback(get_username_from_linkedin_link(data['PersonLinkedin']))
+
     with open(filename, 'a', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=headers)
         if not file_exists:
             writer.writeheader()
+
         writer.writerow(data)
 
         # Flush the file buffer and force write to disk
@@ -162,7 +179,7 @@ def scrape_and_clean_data(usernames, emails, update_username_callback):
         yield cleaned_data
 
 
-def main(file_path='sample.csv', update_username_callback=None):
+def main(file_path='sample.csv', update_username_callback=None, duplicate_username_warning_callback=None):
     """
     Main function to scrape and clean data for LinkedIn usernames in a CSV file
     :param file_path:
@@ -173,9 +190,10 @@ def main(file_path='sample.csv', update_username_callback=None):
 
     # Scrape and clean data for each username, and add it to a CSV file
     for data in scrape_and_clean_data(usernames, emails, update_username_callback):
-        add_entry_to_csv(data)
-
-    print("Data added to CSV file")
+        if duplicate_username_warning_callback is not None:
+            add_entry_to_csv(data, 'output.csv', duplicate_username_warning_callback)
+        else:
+            add_entry_to_csv(data)
 
 
 if __name__ == "__main__":

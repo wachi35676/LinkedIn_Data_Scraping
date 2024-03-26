@@ -32,7 +32,8 @@ class App(tk.Tk):
         file_path = self.file_path.get()
         if file_path:
             scrape_window = ScrapeWindow(self)
-            scraping_thread = threading.Thread(target=scrape_window.scrape_data, args=(file_path, scrape_window.update_username))
+            scraping_thread = threading.Thread(target=scrape_window.scrape_data,
+                                               args=(file_path, scrape_window.update_username, scrape_window.duplicate_username_warning))
             scraping_thread.start()
         else:
             self.label.config(text="Please select a CSV file first.")
@@ -42,34 +43,36 @@ class ScrapeWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Scraping in Progress")
-        self.geometry("250x100")
+        self.geometry("400x250")
         self.resizable(False, False)
 
         self.progress_bar = ttk.Progressbar(self, mode='indeterminate')
         self.progress_bar.pack(pady=10)
 
-        self.current_username_var = tk.StringVar()
-        self.current_username_label = tk.Label(self, textvariable=self.current_username_var)
-        self.current_username_label.pack(pady=10)
+        self.status_text = tk.Text(self, height=10, width=40)  # Create a Text widget
+        self.status_text.pack(pady=10)
 
         self.progress_bar.start()
 
-    def scrape_data(self, file_path, update_username_callback):
+    def scrape_data(self, file_path, update_username_callback, duplicate_username_warning_callback):
         try:
-            main(file_path, update_username_callback)
+            main(file_path, update_username_callback, duplicate_username_warning_callback)
             messagebox.showinfo("Success", "Data added to CSV file")
         except Exception as e:
+            print(e)
             messagebox.showerror("Error", str(e))
         finally:
             self.progress_bar.stop()
-            self.current_username_var.set("")
             self.destroy()
 
     def update_username(self, username):
-        self.current_username_var.set(f"Scraping data for: {username}")
+        self.status_text.insert(tk.END, f"Scraping data for: {username}\n")  # Insert message to status_text
+        self.status_text.see(tk.END)
+
+    def duplicate_username_warning(self, username):
+        self.status_text.insert(tk.END, f"Duplicate username found: {username}\n")  # Insert message to status_text
+        self.status_text.see(tk.END)
         self.update()
-
-
 
 
 if __name__ == "__main__":

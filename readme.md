@@ -36,7 +36,7 @@ Before running the code, make sure you have the following:
 To run the script, navigate to the project root directory and execute the following command:
 
 ```
-python main.py
+python gui.py
 ```
 
 This command will perform the following steps:

@@ -114,11 +114,14 @@ def clean_data(raw_data):
                         + json.dumps(raw_data)
                         + ". Please map the keys from my JSON object to the keys in the example format. "
                           "Do not add any extra keys that are not present in the example format."
+                          "Also the experience array should have maximum 3 experiences. "
+                          "The current job will not be in the experience array."
              }
         ]
     )
 
     return response.choices[0].message.content
+
 
 
 def add_entry_to_csv(data, filename='output.csv', duplicate_username_warning_callback=None):

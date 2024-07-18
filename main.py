@@ -2,6 +2,8 @@ import csv
 import http.client
 import json
 import os
+from time import sleep
+
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -75,19 +77,16 @@ def scrape_linkedin_data(username):
     :param username:
     :return:
     """
-    conn = http.client.HTTPSConnection("linkedin-api8.p.rapidapi.com")
+    conn = http.client.HTTPSConnection("linkedin-data-api.p.rapidapi.com")
 
     headers = {
         'X-RapidAPI-Key': os.getenv("RAPID_API_KEY"),
-        'X-RapidAPI-Host': "linkedin-api8.p.rapidapi.com"
+        'X-RapidAPI-Host': "linkedin-data-api.p.rapidapi.com"
     }
 
     conn.request("GET", "/?username=" + username, headers=headers)
 
     res = conn.getresponse()
-
-    if not json.loads(res.read().decode("utf-8"))['success']:
-        raise Exception("User not found")
 
     if res.status == 429:
         response = json.loads(res.read().decode("utf-8"))
@@ -105,8 +104,10 @@ def clean_data(raw_data):
     :param raw_data: JSON object with a different format
     :return: JSON object with the desired format
     """
+    sleep(1)
+
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
+        model="gpt-3.5-turbo",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system",
@@ -171,47 +172,35 @@ def scrape_and_clean_data(usernames, emails, update_username_callback):
     """
     Scrape and clean data for each username
     :param usernames:
-    :param emails:
     :param update_username_callback: Callback function to update the username
     :return:
     """
+    failed_headers = ['LinkedIn link', 'Email', 'Error']
+    failed_file_exists = os.path.isfile('failed.csv')
+
     for username in usernames:
-        update_username_callback(username)  # Call the callback with the current username
         try:
+            update_username_callback(username)
             raw_data = scrape_linkedin_data(username)
             cleaned_data = clean_data(json.loads(raw_data))
             cleaned_data = json.loads(cleaned_data)
+            if cleaned_data['FirstName'] == '':
+                raise Exception("User not found")
             cleaned_data['PersonLinkedin'] = f"https://www.linkedin.com/in/{username}"
             cleaned_data['Email'] = emails[username]
-            yield cleaned_data, None
+            yield cleaned_data
         except Exception as e:
-            yield None, (username, emails[username], str(e))
-
-
-def add_failed_entry_to_csv(data, filename='failed.csv'):
-    """
-    Add a failed entry to a separate CSV file
-    :param data: Tuple containing (username, email, error_message)
-    :param filename: Name of the CSV file to store failed entries
-    """
-    headers = ['LinkedIn Username', 'Email', 'Error Message']
-
-    file_exists = os.path.isfile(filename)
-
-    with open(filename, 'a', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=headers)
-        if not file_exists:
-            writer.writeheader()
-
-        writer.writerow({
-            'LinkedIn Username': data[0],
-            'Email': data[1],
-            'Error Message': data[2]
-        })
-
-        # Flush the file buffer and force write to disk
-        csvfile.flush()
-        os.fsync(csvfile.fileno())
+            with open('failed.csv', 'a', newline='') as failed_csv:
+                writer = csv.DictWriter(failed_csv, fieldnames=failed_headers)
+                if not failed_file_exists:
+                    writer.writeheader()
+                    failed_file_exists = True
+                writer.writerow({
+                    'LinkedIn link': f"https://www.linkedin.com/in/{username}",
+                    'Email': emails[username],
+                    'Error': str(e)
+                })
+            continue
 
 
 def main(file_path='sample.csv', update_username_callback=None, duplicate_username_warning_callback=None):
@@ -219,20 +208,16 @@ def main(file_path='sample.csv', update_username_callback=None, duplicate_userna
     Main function to scrape and clean data for LinkedIn usernames in a CSV file
     :param file_path:
     :param update_username_callback: Callback function to update the username
-    :param duplicate_username_warning_callback: Callback function to warn about duplicate usernames
     :return:
     """
     usernames, emails = get_linkedin_usernames(file_path)
 
     # Scrape and clean data for each username, and add it to a CSV file
-    for data, failed_entry in scrape_and_clean_data(usernames, emails, update_username_callback):
-        if data:
-            if duplicate_username_warning_callback is not None:
-                add_entry_to_csv(data, 'output.csv', duplicate_username_warning_callback)
-            else:
-                add_entry_to_csv(data)
+    for data in scrape_and_clean_data(usernames, emails, update_username_callback):
+        if duplicate_username_warning_callback is not None:
+            add_entry_to_csv(data, 'output.csv', duplicate_username_warning_callback)
         else:
-            add_failed_entry_to_csv(failed_entry, 'failed.csv')
+            add_entry_to_csv(data)
 
 
 if __name__ == "__main__":
